@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학교 Q&A 공간</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts에서 예쁜 글꼴(Inter)을 가져옵니다. -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 배경을 장식하는 원형 모양들 (Glassmorphism 효과를 돋보이게 합니다) -->
+    <div class="bg-shape shape1"></div>
+    <div class="bg-shape shape2"></div>
+
+    <!-- 웹 앱의 전체를 감싸는 틀 (Container) -->
+    <div class="app-container">
+        
+        <!-- 왼쪽 단: 키워드 (분류) -->
+        <aside class="sidebar left-sidebar glass-panel">
+            <h2>🏷️ 주제별 키워드</h2>
+            <ul class="keyword-list">
+                <li class="active">전체보기</li>
+                <li>국어</li>
+                <li>영어</li>
+                <li>수학</li>
+                <li>과학</li>
+                <li>사회</li>
+                <li>코딩(정보)</li>
+                <li>기타</li>
+            </ul>
+        </aside>
+
+        <!-- 가운데 단: 질문 게시판 (메인 피드) -->
+        <main class="main-feed glass-panel">
+            <div class="feed-header">
+                <h2>💬 질문 게시판</h2>
+                <!-- 새 질문을 작성하는 버튼 -->
+                <button id="newQuestionBtn" class="primary-btn">새 질문하기</button>
+            </div>
+            
+            <!-- 질문 카드들이 나열되는 공간 -->
+            <div id="questionList" class="question-list">
+                <!-- 질문 카드는 JavaScript(자바스크립트)를 통해 여기에 추가됩니다. -->
+            </div>
+        </main>
+
+        <!-- 오른쪽 단: 공지사항 -->
+        <aside class="sidebar right-sidebar glass-panel">
+            <h2>📢 공지사항</h2>
+            <div class="announcement-card">
+                <h3>중간고사 관련 안내</h3>
+                <p>다음 주부터 중간고사 기간입니다. 모르는 문제는 이곳에 자유롭게 질문해 주세요!</p>
+                <span class="date">2026. 05. 03.</span>
+            </div>
+            <div class="announcement-card">
+                <h3>앱 사용 예절</h3>
+                <p>서로 존중하는 언어를 사용하고, 답변을 받으면 고맙다는 인사를 남겨볼까요?</p>
+                <span class="date">2026. 05. 01.</span>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- 새 질문 작성용 팝업 창 (모달: 화면 위에 뜨는 창) -->
+    <div id="newQuestionModal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel">
+            <h2>새 질문 작성하기</h2>
+            <input type="text" id="questionTitleInput" placeholder="질문 제목을 간단히 적어주세요.">
+            <textarea id="questionBodyInput" placeholder="어떤 부분이 궁금한가요? 자세히 적어주세요!"></textarea>
+            <div class="modal-actions">
+                <button id="cancelQuestionBtn" class="secondary-btn">취소</button>
+                <button id="submitQuestionBtn" class="primary-btn">등록하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 질문 상세 보기 및 답변 작성 팝업 창 (모달) -->
+    <div id="questionDetailModal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel question-detail-content">
+            <div class="detail-header">
+                <h2 id="detailTitle">질문 제목</h2>
+                <button id="closeDetailBtn" class="close-btn">✖</button>
+            </div>
+            <p id="detailBody" class="detail-body">질문 내용이 여기에 표시됩니다.</p>
+            
+            <hr class="divider">
+            
+            <h3>답변 (댓글)</h3>
+            <!-- 답변들이 나열되는 공간 -->
+            <div id="answerList" class="answer-list">
+                <!-- 답변 카드는 JavaScript로 추가됩니다. -->
+            </div>
+            
+            <!-- 답변 작성 영역 -->
+            <div class="answer-input-area">
+                <textarea id="answerInput" placeholder="답변을 작성해서 친구를 도와주세요!"></textarea>
+                <button id="submitAnswerBtn" class="primary-btn">답변 등록</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 기능(근육)을 담당하는 JavaScript 파일 연결 -->
+    <script src="script.js"></script>
+</body>
+</html>
