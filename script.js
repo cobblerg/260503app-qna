@@ -1,31 +1,27 @@
-// 처음 시작할 때 화면에 보여줄 임시 질문 데이터들입니다. (배열 형태)
-let questions = [
-    {
-        id: 1, // 각 질문을 구분하는 고유 번호
-        title: "수학 근의 공식이 헷갈려요",
-        body: "이차방정식 근의 공식을 외웠는데, 막상 문제에 적용하려니 부호가 너무 헷갈립니다. 쉽게 외우거나 적용하는 꿀팁 있을까요?",
-        author: "익명학생",
-        date: "2026-05-03",
-        answers: [
-            { text: "노래로 외우면 편해요! 유튜브에 '근의 공식 노래' 검색해보세요.", date: "2026-05-03" }
-        ]
-    },
-    {
-        id: 2,
-        title: "과학 광합성 과정 질문입니다.",
-        body: "명반응과 암반응의 차이가 정확히 무엇인가요? 책을 봐도 잘 이해가 안 갑니다 ㅠㅠ 도와주세요 선생님 혹은 친구들!",
-        author: "과학왕",
-        date: "2026-05-02",
-        answers: [] // 아직 답변이 없는 상태
-    }
-];
+// --- 데이터 관리 ---
 
-// 현재 보고 있는 질문의 ID를 기억하기 위한 변수
+// 처음 시작할 때 화면에 보여줄 임시 키워드 데이터입니다. (기본 '전체보기'만 남겨두고 비웁니다.)
+let keywords = ["전체보기"];
+let activeKeyword = "전체보기"; // 현재 선택된 키워드
+
+// 처음 시작할 때 화면에 보여줄 임시 질문 데이터들입니다. (비어있는 상태로 시작합니다.)
+let questions = [];
+
 let currentQuestionId = null;
+let editingKeywordIndex = null; // 수정 중인 키워드의 순서 번호
 
-// HTML 화면 요소(DOM: Document Object Model)들을 찾아옵니다.
+// --- HTML 요소 찾아오기 ---
+
+const keywordListContainer = document.getElementById('keywordList');
+const addKeywordBtn = document.getElementById('addKeywordBtn');
+
+const keywordModal = document.getElementById('keywordModal');
+const keywordModalTitle = document.getElementById('keywordModalTitle');
+const keywordInput = document.getElementById('keywordInput');
+const cancelKeywordBtn = document.getElementById('cancelKeywordBtn');
+const submitKeywordBtn = document.getElementById('submitKeywordBtn');
+
 const questionListContainer = document.getElementById('questionList');
-
 const newQuestionBtn = document.getElementById('newQuestionBtn');
 const newQuestionModal = document.getElementById('newQuestionModal');
 const cancelQuestionBtn = document.getElementById('cancelQuestionBtn');
@@ -41,19 +37,158 @@ const answerListContainer = document.getElementById('answerList');
 const answerInput = document.getElementById('answerInput');
 const submitAnswerBtn = document.getElementById('submitAnswerBtn');
 
-// 1. 질문 목록을 화면에 그리는 함수
+// --- 기능 구현: 키워드 관련 ---
+
+// 1. 키워드 목록을 화면에 그리는 함수
+function renderKeywords() {
+    keywordListContainer.innerHTML = '';
+
+    keywords.forEach((kw, index) => {
+        const li = document.createElement('li');
+        li.className = `keyword-item ${kw === activeKeyword ? 'active' : ''}`;
+        li.draggable = true; // 드래그 가능하게 설정
+        li.dataset.index = index;
+
+        // 키워드 텍스트 부분
+        const textSpan = document.createElement('span');
+        textSpan.textContent = kw;
+        textSpan.style.flex = "1";
+        textSpan.addEventListener('click', () => {
+            activeKeyword = kw;
+            renderKeywords();
+            renderQuestions(); // 해당 키워드로 질문 필터링
+        });
+
+        li.appendChild(textSpan);
+
+        // 수정/삭제 버튼 (전체보기는 삭제 불가)
+        if (kw !== "전체보기") {
+            const actions = document.createElement('div');
+            actions.className = 'keyword-actions';
+            
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '✏️';
+            editBtn.className = 'action-btn';
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                openKeywordModal(index);
+            };
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '🗑️';
+            deleteBtn.className = 'action-btn';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                deleteKeyword(index);
+            };
+
+            actions.appendChild(editBtn);
+            actions.appendChild(deleteBtn);
+            li.appendChild(actions);
+        }
+
+        // 드래그 앤 드롭 이벤트 등록 (순서 변경용)
+        setupDragAndDrop(li);
+
+        keywordListContainer.appendChild(li);
+    });
+}
+
+// 2. 키워드 추가/수정 모달 관련
+addKeywordBtn.addEventListener('click', () => openKeywordModal());
+
+function openKeywordModal(index = null) {
+    editingKeywordIndex = index;
+    if (index !== null) {
+        keywordModalTitle.textContent = "키워드 수정";
+        keywordInput.value = keywords[index];
+    } else {
+        keywordModalTitle.textContent = "키워드 추가";
+        keywordInput.value = "";
+    }
+    keywordModal.classList.remove('hidden');
+}
+
+cancelKeywordBtn.addEventListener('click', () => {
+    keywordModal.classList.add('hidden');
+});
+
+submitKeywordBtn.addEventListener('click', () => {
+    const value = keywordInput.value.trim();
+    if (value === "") return;
+
+    if (editingKeywordIndex !== null) {
+        // 수정 모드
+        keywords[editingKeywordIndex] = value;
+    } else {
+        // 추가 모드
+        keywords.push(value);
+    }
+
+    keywordModal.classList.add('hidden');
+    renderKeywords();
+});
+
+// 3. 키워드 삭제
+function deleteKeyword(index) {
+    if (confirm(`'${keywords[index]}' 키워드를 삭제하시겠습니까?`)) {
+        if (activeKeyword === keywords[index]) activeKeyword = "전체보기";
+        keywords.splice(index, 1);
+        renderKeywords();
+        renderQuestions();
+    }
+}
+
+// 4. 드래그 앤 드롭 정렬 기능 (쉬운 설명을 위해 기본 API 사용)
+function setupDragAndDrop(el) {
+    el.addEventListener('dragstart', (e) => {
+        el.classList.add('dragging');
+    });
+
+    el.addEventListener('dragend', () => {
+        el.classList.remove('dragging');
+        // 순서가 바뀌었으므로 바뀐 순서대로 배열 재정렬 필요 (단순화를 위해 여기서는 시각적 위치만 변경하거나 저장 로직 추가)
+        const items = [...keywordListContainer.querySelectorAll('.keyword-item')];
+        keywords = items.map(item => item.querySelector('span').textContent);
+        renderKeywords();
+    });
+
+    keywordListContainer.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const draggingItem = document.querySelector('.dragging');
+        const siblings = [...keywordListContainer.querySelectorAll('.keyword-item:not(.dragging)')];
+        
+        let nextSibling = siblings.find(sibling => {
+            return e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2;
+        });
+        
+        keywordListContainer.insertBefore(draggingItem, nextSibling);
+    });
+}
+
+// --- 기능 구현: 질문 관련 ---
+
+// 1. 질문 목록을 화면에 그리는 함수 (필터링 포함)
 function renderQuestions() {
-    // 기존에 있던 내용을 싹 지우고 다시 그립니다.
     questionListContainer.innerHTML = '';
 
-    // questions 배열에 있는 데이터를 하나씩 꺼내서 카드를 만듭니다.
-    questions.forEach(q => {
-        // 새로운 div 태그(박스)를 만듭니다.
+    // 현재 선택된 키워드에 따라 필터링합니다.
+    const filteredQuestions = activeKeyword === "전체보기" 
+        ? questions 
+        : questions.filter(q => q.keyword === activeKeyword);
+
+    if (filteredQuestions.length === 0) {
+        questionListContainer.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 40px;">해당 주제의 질문이 아직 없습니다.</p>';
+        return;
+    }
+
+    filteredQuestions.forEach(q => {
         const card = document.createElement('div');
-        card.className = 'question-card'; // 디자인을 위해 클래스 이름 추가
-        
-        // 카드 안에 들어갈 HTML 내용을 채워 넣습니다.
+        card.className = 'question-card';
         card.innerHTML = `
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <span style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color); font-size: 0.75rem; padding: 2px 8px; border-radius: 20px; font-weight: bold;"># ${q.keyword}</span>
+            </div>
             <h3>${q.title}</h3>
             <p>${q.body}</p>
             <div class="card-footer">
@@ -62,127 +197,93 @@ function renderQuestions() {
             </div>
         `;
 
-        // 카드를 클릭했을 때 상세 보기 창이 열리도록 설정합니다.
         card.addEventListener('click', () => openQuestionDetail(q.id));
-
-        // 만들어진 카드를 화면(목록)에 추가합니다.
         questionListContainer.appendChild(card);
     });
 }
 
-// 2. 새 질문 모달 열기/닫기 기능
+// 2. 새 질문 모달 관련
 newQuestionBtn.addEventListener('click', () => {
-    // hidden 클래스를 제거하면 화면에 나타납니다.
     newQuestionModal.classList.remove('hidden');
 });
 
 cancelQuestionBtn.addEventListener('click', () => {
-    // hidden 클래스를 추가하면 다시 숨겨집니다.
     newQuestionModal.classList.add('hidden');
-    // 쓰던 내용을 지워줍니다.
     questionTitleInput.value = '';
     questionBodyInput.value = '';
 });
 
-// 3. 새 질문 등록하기 기능
 submitQuestionBtn.addEventListener('click', () => {
     const title = questionTitleInput.value.trim();
     const body = questionBodyInput.value.trim();
 
-    // 입력 안 한 항목이 있는지 검사합니다.
     if (title === '' || body === '') {
         alert("제목과 내용을 모두 입력해주세요!");
-        return; // 함수를 여기서 종료합니다.
+        return;
     }
 
-    // 새로운 질문 데이터를 만듭니다.
     const newQuestion = {
-        id: Date.now(), // 현재 시간을 고유 번호로 사용
+        id: Date.now(),
         title: title,
         body: body,
         author: "새로운친구",
-        date: new Date().toISOString().split('T')[0], // 오늘 날짜
-        answers: [] // 처음엔 답변이 0개
+        date: new Date().toISOString().split('T')[0],
+        keyword: activeKeyword === "전체보기" ? "기타" : activeKeyword, // 현재 보고 있는 카테고리로 자동 지정
+        answers: []
     };
 
-    // 데이터를 목록(배열)의 맨 앞에 추가합니다. (최신 글이 위로 오게)
     questions.unshift(newQuestion);
-    
-    // 모달을 닫고, 입력칸을 비우고, 화면을 다시 그립니다.
     newQuestionModal.classList.add('hidden');
     questionTitleInput.value = '';
     questionBodyInput.value = '';
     renderQuestions();
 });
 
-// 4. 질문 상세 보기 창 열기 기능
+// 3. 질문 상세 보기 및 답변 기능
 function openQuestionDetail(id) {
-    // 클릭한 질문 데이터를 찾습니다.
     const question = questions.find(q => q.id === id);
     if (!question) return;
 
-    currentQuestionId = id; // 현재 보고 있는 질문 번호 저장
-
-    // 상세 창에 내용을 채워 넣습니다.
-    detailTitle.textContent = question.title;
+    currentQuestionId = id;
+    detailTitle.textContent = `[${question.keyword}] ${question.title}`;
     detailBody.textContent = question.body;
-    
-    // 답변 목록 그리기
     renderAnswers(question.answers);
-
-    // 상세 창 띄우기
     questionDetailModal.classList.remove('hidden');
 }
 
-// 5. 답변(댓글) 목록 그리는 함수
 function renderAnswers(answers) {
-    answerListContainer.innerHTML = ''; // 초기화
-    
+    answerListContainer.innerHTML = '';
     if (answers.length === 0) {
         answerListContainer.innerHTML = '<p style="color: #6b7280; font-size: 0.9rem;">아직 답변이 없습니다. 첫 답변을 남겨주세요!</p>';
         return;
     }
-
     answers.forEach(ans => {
         const answerCard = document.createElement('div');
         answerCard.className = 'answer-card';
-        answerCard.innerHTML = `
-            <p>${ans.text}</p>
-            <span style="font-size: 0.8rem; color: #9ca3af;">${ans.date}</span>
-        `;
+        answerCard.innerHTML = `<p>${ans.text}</p><span style="font-size: 0.8rem; color: #9ca3af;">${ans.date}</span>`;
         answerListContainer.appendChild(answerCard);
     });
 }
 
-// 6. 질문 상세 창 닫기 기능
 closeDetailBtn.addEventListener('click', () => {
     questionDetailModal.classList.add('hidden');
     currentQuestionId = null;
     answerInput.value = '';
 });
 
-// 7. 새 답변 등록하기 기능
 submitAnswerBtn.addEventListener('click', () => {
     const text = answerInput.value.trim();
-    if (text === '') {
-        alert("답변 내용을 입력해주세요!");
-        return;
-    }
+    if (text === '') return;
 
-    // 현재 보고 있는 질문을 찾아서 답변을 추가합니다.
     const question = questions.find(q => q.id === currentQuestionId);
     if (question) {
-        question.answers.push({
-            text: text,
-            date: new Date().toISOString().split('T')[0]
-        });
-        
-        // 입력칸 비우고 화면을 다시 그립니다.
+        question.answers.push({ text: text, date: new Date().toISOString().split('T')[0] });
         answerInput.value = '';
         renderAnswers(question.answers);
-        renderQuestions(); // 메인 화면의 '답변 n개' 숫자도 업데이트해야 하므로 메인 화면도 다시 그립니다.
+        renderQuestions();
     }
 });
 
-// 앱이 처음 시작될 때 실행할 코드 (초기화)
+// 초기화
+renderKeywords();
 renderQuestions();

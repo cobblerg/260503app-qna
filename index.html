@@ -18,16 +18,12 @@
         
         <!-- 왼쪽 단: 키워드 (분류) -->
         <aside class="sidebar left-sidebar glass-panel">
-            <h2>🏷️ 주제별 키워드</h2>
-            <ul class="keyword-list">
-                <li class="active">전체보기</li>
-                <li>국어</li>
-                <li>영어</li>
-                <li>수학</li>
-                <li>과학</li>
-                <li>사회</li>
-                <li>코딩(정보)</li>
-                <li>기타</li>
+            <div class="sidebar-header">
+                <h2>🏷️ 주제별 키워드</h2>
+                <button id="addKeywordBtn" class="icon-btn" title="키워드 추가">➕</button>
+            </div>
+            <ul id="keywordList" class="keyword-list">
+                <!-- 키워드 목록은 JavaScript로 동적으로 생성됩니다. -->
             </ul>
         </aside>
 
@@ -96,6 +92,18 @@
             <div class="answer-input-area">
                 <textarea id="answerInput" placeholder="답변을 작성해서 친구를 도와주세요!"></textarea>
                 <button id="submitAnswerBtn" class="primary-btn">답변 등록</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 키워드 편집용 팝업 창 (모달) -->
+    <div id="keywordModal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel" style="max-width: 400px;">
+            <h2 id="keywordModalTitle">키워드 추가</h2>
+            <input type="text" id="keywordInput" placeholder="키워드 이름을 입력하세요 (예: 과학)">
+            <div class="modal-actions">
+                <button id="cancelKeywordBtn" class="secondary-btn">취소</button>
+                <button id="submitKeywordBtn" class="primary-btn">저장</button>
             </div>
         </div>
     </div>
